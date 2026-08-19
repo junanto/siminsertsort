@@ -131,18 +131,18 @@ function makeSteps(a){
   for(let i=1;i<arr.length;i++){
     let key=arr[i];
     let j=i-1;
-    result.push({arr:arr.slice(),i,keyIndex:i,compareIndex:j,action:'key',
+    result.push({arr:arr.slice(),i,keyIndex:i,keyValue:key,compareIndex:j,action:'key',
       comparisons,shifts,text:`Iterasi ${i}: ambil elemen ${key} sebagai KEY. Bagian kiri sampai posisi ${i-1} sudah terurut.`});
 
     while(j>=0){
       comparisons++;
-      result.push({arr:arr.slice(),i,keyIndex:i,compareIndex:j,action:'compare',
+      result.push({arr:arr.slice(),i,keyIndex:i,keyValue:key,compareIndex:j,action:'compare',
         comparisons,shifts,text:`Bandingkan KEY ${key} dengan ${arr[j]}.`});
 
       if(arr[j] > key){
         arr[j+1]=arr[j];
         shifts++;
-        result.push({arr:arr.slice(),i,keyIndex:i,compareIndex:j,action:'shift',
+        result.push({arr:arr.slice(),i,keyIndex:i,keyValue:key,compareIndex:j,action:'shift',
           comparisons,shifts,text:`Karena ${arr[j+1]} lebih besar daripada KEY ${key}, elemen tersebut digeser satu posisi ke kanan.`});
         j--;
       }else{
@@ -151,11 +151,11 @@ function makeSteps(a){
     }
 
     arr[j+1]=key;
-    result.push({arr:arr.slice(),i,keyIndex:j+1,compareIndex:j,action:'insert',
+    result.push({arr:arr.slice(),i,keyIndex:j+1,keyValue:key,compareIndex:j,action:'insert',
       comparisons,shifts,text:`KEY ${key} disisipkan pada posisi yang tepat. Bagian kiri sekarang terurut sampai posisi ${i}.`});
   }
 
-  result.push({arr:arr.slice(),i:arr.length,keyIndex:-1,compareIndex:-1,action:'done',
+  result.push({arr:arr.slice(),i:arr.length,keyIndex:-1,keyValue:null,compareIndex:-1,action:'done',
     comparisons,shifts,text:'Selesai! Semua elemen sudah berada dalam urutan menaik.'});
   return result;
 }
@@ -182,10 +182,22 @@ function render(){
     const el=document.createElement('div');
     el.className='item';
     if(idx<s.i)el.classList.add('sorted');
-    if(idx===s.keyIndex)el.classList.add('key');
+
+    // Selama KEY masih dalam proses dibandingkan/digeser,
+    // tampilkan nilai KEY asli, bukan nilai yang sudah tertimpa pada array.
+    let displayValue = v;
+    if(s.keyValue !== undefined &&
+       ['key','compare','shift'].includes(s.action) &&
+       idx === s.keyIndex){
+      displayValue = s.keyValue;
+    }
+
+    if(idx===s.keyIndex &&
+       ['key','compare','shift'].includes(s.action)) el.classList.add('key');
     if(idx===s.compareIndex && s.action==='compare')el.classList.add('compare');
     if(s.action==='shift' && idx===s.compareIndex+1)el.classList.add('shift');
-    el.innerHTML=v+'<small>pos '+(idx+1)+'</small>';
+
+    el.innerHTML=displayValue+'<small>pos '+(idx+1)+'</small>';
     box.appendChild(el);
   });
 
